@@ -1,169 +1,79 @@
 package com.book.pong_v2;
 
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Point;
-import android.graphics.Rect;
-import android.graphics.RectF;
-
+import com.book.simplegameengine_v2.SGEntity;
 import com.book.simplegameengine_v2.SGImage;
 import com.book.simplegameengine_v2.SGImageFactory;
 import com.book.simplegameengine_v2.SGRenderer;
 import com.book.simplegameengine_v2.SGView;
 
-public class GameView extends SGView 
-{	
-	private final static int BALL_SIZE = 16;
-	private final static int BALL_SPEED = 120;
-	private final static int DISTANCE_FROM_EDGE = 16;
-	private final static int OPPONENT_SPEED = 120;
-	private final static int PADDLE_HEIGHT = 98;
-	private final static int PADDLE_WIDTH = 23;
+import android.content.Context;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Rect;
+
+public class GameView extends SGView {	
 	
+	private boolean mIsDebug = false;
+	private GameModel mModel;
+	
+	// Alterado para Rect() ao invés de RectF(). Alteração realizada pois a classe SGRenderer utiliza Rect()
+	// para o método drawImage.
+	private Rect mTempSrcRect = new Rect();
 	private SGImage mBallImage;
-	private boolean mBallMoveRight = true;
-	private RectF	mBallDestination = new RectF();
 	private SGImage mOpponentImage;
-	private boolean mOpponentMoveDown = true;
-	private RectF	mOpponentDestination = new RectF();
 	private SGImage mPlayerImage;
-	private RectF	mPlayerDestination = new RectF();
-	private Rect 	mTempImageSource = new Rect();
 	
-	public GameView(Context context)
-	{
+	// Construtor padrão apenas com o parâmetro Context. Necessário para a compilação, porém é 
+	// delcarado como private para evitar o uso, já que o construtor necessário deve receber
+	// um modelo como parâmetro.
+	private GameView(Context context) {
+		super(context);		
+	}
+	
+	public GameView(Context context, GameModel model) {
 		super(context);
+		mModel = model;
 	}
 	
 	@Override
-	protected void setup() 
-	{
+	public void setup() {
+		mModel.setup();
 		SGImageFactory imageFactory = getImageFactory();
-		
-		//mBallImage = imageFactory.createImage(R.drawable.ball);
 		mBallImage = imageFactory.createImage("ball.png");
 		mPlayerImage = imageFactory.createImage("player.png");
 		mOpponentImage = imageFactory.createImage("opponent.png");
-
-		Point viewDimensions = getDimensions();
-		Point viewCenter = new Point(viewDimensions.x / 2, viewDimensions.y / 2);
-		
-		int halfBall = BALL_SIZE / 2;
-		int halfPaddleHeight = PADDLE_HEIGHT / 2; 
-		
-		mBallDestination.set(viewCenter.x - halfBall, // Esquerda
-				  			 viewCenter.y - halfBall, // Topo
-				  			 viewCenter.x + halfBall, // Direita
-				  			 viewCenter.y + halfBall); // Base
-		
-		mPlayerDestination.set(DISTANCE_FROM_EDGE, // Esquerda
-							   viewCenter.y - halfPaddleHeight, // Topo
-							   DISTANCE_FROM_EDGE + PADDLE_WIDTH, // Direita
-							   viewCenter.y + halfPaddleHeight); // Base
-		
-		mOpponentDestination.set(viewDimensions.x - (DISTANCE_FROM_EDGE + PADDLE_WIDTH), // Esquerda
-					  			 viewCenter.y - halfPaddleHeight, // Topo
-					  			 viewDimensions.x - DISTANCE_FROM_EDGE, // Direita
-					  			 viewCenter.y + halfPaddleHeight); // Base
 	}
 	
-	@Override 
+	@Override
 	public void step(Canvas canvas, float elapsedTimeInSeconds) {
-		moveBall(elapsedTimeInSeconds);
-		moveOpponent(elapsedTimeInSeconds);
-		
+		mModel.step(elapsedTimeInSeconds);
 		SGRenderer renderer = getRenderer();
-		
 		renderer.beginDrawing(canvas, Color.BLACK);
 		
-		mTempImageSource.set(0, 0, BALL_SIZE, BALL_SIZE);
-		renderer.drawImage(mBallImage, mTempImageSource, mBallDestination);
-		
-		mTempImageSource.set(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT);
-		renderer.drawImage(mPlayerImage, mTempImageSource, mPlayerDestination);
-		
-		mTempImageSource.set(0, 0, PADDLE_WIDTH, PADDLE_HEIGHT);
-		renderer.drawImage(mOpponentImage, mTempImageSource, mOpponentDestination);
-		
-		renderer.endDrawing();
-	}
-
-
-	public void moveBall(float elapsedTimeInSeconds) 
-	{
-		Point viewDimensions = getDimensions();
-		if(mBallMoveRight == true) 
-		{
-			mBallDestination.left += BALL_SPEED * elapsedTimeInSeconds;
-			mBallDestination.right += BALL_SPEED * elapsedTimeInSeconds;
+		if(mIsDebug) {
+			SGEntity opponent = mModel.getOpponent();
+			renderer.drawRect(opponent.getPosition(), opponent.getDimensions(), 
+					opponent.getDebugColor());
+			SGEntity player = mModel.getPlayer();
+			renderer.drawRect(player.getPosition(), opponent.getDimensions(), 
+					opponent.getDebugColor());
+			SGEntity ball = mModel.getBall();
+			renderer.drawRect(ball.getPosition(), ball.getDimensions(), ball.getDebugColor());
+		}
+		else {
+			mTempSrcRect.set(0, 0, GameModel.PADDLE_WIDTH, GameModel.PADDLE_HEIGHT);
+			SGEntity opponent = mModel.getOpponent();
+			renderer.drawImage(mOpponentImage, mTempSrcRect, opponent.getPosition(), opponent.getDimensions());
 			
-			if(mBallDestination.right >= viewDimensions.x) 
-			{
-				mBallDestination.left = viewDimensions.x - BALL_SIZE;
-				mBallDestination.right = viewDimensions.x;
-				mBallMoveRight = false;
-			}
-		}
-		else 
-		{
-			mBallDestination.left -= BALL_SPEED * elapsedTimeInSeconds;
-			mBallDestination.right -= BALL_SPEED * elapsedTimeInSeconds;
+			mTempSrcRect.set(0, 0, GameModel.PADDLE_WIDTH, GameModel.PADDLE_HEIGHT);
+			SGEntity player = mModel.getPlayer();
+			renderer.drawImage(mPlayerImage, mTempSrcRect, player.getPosition(), player.getDimensions());
 			
-			if(mBallDestination.left < 0) 
-			{
-				mBallDestination.left = 0;
-				mBallDestination.right = BALL_SIZE;
-				mBallMoveRight = true;
-			}
+			SGEntity ball = mModel.getBall();
+			mTempSrcRect.set(0, 0, GameModel.BALL_SIZE, GameModel.BALL_SIZE);
+			renderer.drawImage(mBallImage, mTempSrcRect, ball.getPosition(), ball.getDimensions());
 		}
-	}
-
-	public void moveOpponent(float elapsedTimeInSeconds) 
-	{
-		Point viewDimensions = getDimensions();
-		if(mOpponentMoveDown == true) 
-		{
-			mOpponentDestination.top += OPPONENT_SPEED * elapsedTimeInSeconds;
-			mOpponentDestination.bottom += OPPONENT_SPEED * elapsedTimeInSeconds;
-			
-			if(mOpponentDestination.bottom >= viewDimensions.y) 
-			{
-				mOpponentDestination.top = viewDimensions.y - PADDLE_HEIGHT;
-				mOpponentDestination.bottom = viewDimensions.y;
-				mOpponentMoveDown = false;
-			}
-		}
-		else 
-		{
-			mOpponentDestination.top -= OPPONENT_SPEED * elapsedTimeInSeconds;
-			mOpponentDestination.bottom -= OPPONENT_SPEED * elapsedTimeInSeconds;
-			
-			if(mOpponentDestination.top < 0) 
-			{
-				mOpponentDestination.top = 0;
-				mOpponentDestination.bottom = PADDLE_HEIGHT;
-				mOpponentMoveDown = true;
-			}
-		}
-	}
-	
-	public void movePlayer(float x, float y) 
-	{
-		Point viewDimensions = getDimensions();
-		mPlayerDestination.top += y;
-		mPlayerDestination.bottom += y;
 		
-		if(mPlayerDestination.top < 0) 
-		{
-			mPlayerDestination.top = 0;
-			mPlayerDestination.bottom = PADDLE_HEIGHT;
-		}
-		else if(mPlayerDestination.bottom > viewDimensions.y) 
-		{
-			mPlayerDestination.top = viewDimensions.y - PADDLE_HEIGHT;
-			mPlayerDestination.bottom = viewDimensions.y;
-		}
 	}
 
 }

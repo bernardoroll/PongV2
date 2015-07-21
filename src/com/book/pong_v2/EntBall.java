@@ -18,9 +18,9 @@ public class EntBall extends SGEntity {
 	@Override
 	public void step(float elapsedTimeInSeconds) {
 		move(mSpeed * elapsedTimeInSeconds, 0);
-		SGWorld world = getWorld();
+		GameModel world = (GameModel) getWorld();
 		PointF position = getPosition();
-		PointF dimensions = getDimensions();
+		PointF dimensions = getDimensions();		
 		if(position.x < 0) {
 			setPosition(0, getPosition().y);
 			mSpeed = -mSpeed;
@@ -29,6 +29,18 @@ public class EntBall extends SGEntity {
 			setPosition(world.getDimensions().x - dimensions.x, getPosition().y);
 			mSpeed = -mSpeed;
 		}
+		
+		EntOpponent opponent = world.getOpponent();
+		EntPlayer player = world.getPlayer();
+		if(world.collisionTest(getBoundingBox(), player.getBoundingBox())) {
+			setPosition(player.getBoundingBox().right, position.y);
+			mSpeed = -mSpeed;
+		}
+		else if(world.collisionTest(getBoundingBox(), opponent.getBoundingBox())) {
+			setPosition(opponent.getPosition().x - dimensions.x, position.y);
+			mSpeed = -mSpeed;
+		}
+		
 	}
 
 }
