@@ -20,7 +20,9 @@ public class GameController implements SGInputSubscriber {
 
 	@Override
 	public void onScroll(MotionEvent downEvent, MotionEvent moveEvent, float distanceX, float distanceY) {
-		mModel.movePlayer(-distanceX, -distanceY);
+		if(mModel.getCurrentState() == GameModel.STATE_RUNNING) {
+			mModel.movePlayer(-distanceX, -distanceY);
+		}
 
 	}
 
