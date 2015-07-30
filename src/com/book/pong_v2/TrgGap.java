@@ -18,9 +18,9 @@ public class TrgGap extends SGTrigger {
 	public void onHit(SGEntity entity, float elapsedTimeInSeconds) {
 		entity.setPosition(entity.getPosition().x, GAP_SIZE);
 		
-		if(entity.getId() == GameModel.OPPONENT_ID) {
+		/*if(entity.getId() == GameModel.OPPONENT_ID) {
 			EntOpponent opponent = (EntOpponent) entity;
 			opponent.setSpeed(-opponent.getSpeed());
-		}
+		}*/
 	}
 }

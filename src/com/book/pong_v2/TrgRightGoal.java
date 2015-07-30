@@ -17,8 +17,16 @@ public class TrgRightGoal extends SGTrigger {
 	public void onHit(SGEntity entity, float elapsedTimeInSeconds) {
 		GameModel model = (GameModel) getWorld();
 		model.increasePlayerScore();
+		
+		EntOpponent opponent = model.getOpponent();
+		opponent.calculateSpeed(model.getPlayerScore());
+		opponent.decreaseReaction();
+		
 		Log.d("PongV2", "Jogador marca um ponto!");
 		model.logScore();
+		/*
+		 * Comentar GameModel.STATE_GOAL ????????????????????????
+		 */
 		model.setCurrentState(GameModel.STATE_GOAL);
 	}
 

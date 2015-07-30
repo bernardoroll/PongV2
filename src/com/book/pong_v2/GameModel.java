@@ -236,14 +236,42 @@ public class GameModel extends SGWorld {
 		
 		mPlayer.setPosition(mPlayer.getPosition().x, paddlePositionY);
 		
-		if(mRandom.nextInt(2) == 0) {
-			mBall.setVelocity(-90f, 90f);
-		}
-		else {
-			mBall.setVelocity(90.0f, 90.0f);
+		_calculateBallAngle();
+		
+//		if(mRandom.nextInt(2) == 0) {
+//			mBall.setVelocity(-90f, 90f);
+//		}
+//		else {
+//			mBall.setVelocity(90.0f, 90.0f);
+//		}
+		
+	}
+	
+	// Serão definidos 4 setores que podem ser sorteados para o início do movimento
+	// da bola: 
+	// - de 0 a 15 graus e de 345 a 360 graus (direita);
+	// - de 165 a 180 graus e de 180 a 195 graus (esquerda);
+	private void _calculateBallAngle() {
+		int chooseSide = mRandom.nextInt(4);
+		int angle;
+		if(chooseSide == 0) { //Superior direito
+			angle = mRandom.nextInt(16);
+		} 
+		else if(chooseSide == 1) {
+			angle = mRandom.nextInt(16) + 165;
+		} 
+		else if(chooseSide == 2) {
+			angle = mRandom.nextInt(16) + 180;
+		} 
+		else { //chooseSide == 3
+			angle = mRandom.nextInt(16) + 345;
 		}
 		
-		
+		mBall.setPosition(getDimensions().x / 2 - mBall.getDimensions().x / 2, 
+				getDimensions().y / 2 - mBall.getDimensions().y / 2);
+		float ballSpeed = mBall.calculateSpeed(mPlayerScore);
+		float radian = (float)(angle * (Math.PI / 180));
+		mBall.setVelocity(ballSpeed * (float)Math.cos(radian), ballSpeed * (float)Math.sin(radian));
 	}
 	
 	public int getCurrentState() {
